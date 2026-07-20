@@ -1,0 +1,39 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Pending Approvals</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; color: #222; }
+        h1 { font-size: 1.4rem; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+        .meta { color: #666; font-size: 0.85rem; margin-bottom: 8px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #eef; margin-right: 6px; }
+        .empty { color: #888; padding: 40px 0; text-align: center; }
+        a.button { display: inline-block; margin-top: 8px; padding: 6px 14px; background: #2b6cb0; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <h1>Pending Approvals ({{ pending|length }})</h1>
+
+    {% for messages_group in messages %}{% endfor %}
+
+    {% if pending %}
+        {% for approval in pending %}
+        <div class="card">
+            <div class="meta">
+                <span class="badge">{{ approval.run.category }}</span>
+                <span class="badge">urgency: {{ approval.run.urgency }}</span>
+                <span class="badge">sentiment: {{ approval.run.sentiment }}</span>
+                requested {{ approval.requested_at }}
+            </div>
+            <p>{{ approval.run.draft_response|truncatewords:30 }}</p>
+            <a class="button" href="{% url 'dashboard:approval_detail' approval.id %}">Review</a>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">No pending approvals right now.</div>
+    {% endif %}
+</body>
+</html>

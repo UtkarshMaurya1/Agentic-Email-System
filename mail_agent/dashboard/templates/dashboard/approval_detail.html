@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Review Approval</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; color: #222; }
+        h1 { font-size: 1.3rem; }
+        .meta { color: #666; font-size: 0.85rem; margin-bottom: 16px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #eef; margin-right: 6px; }
+        .risk { background: #fee; color: #900; }
+        textarea { width: 100%; min-height: 220px; padding: 10px; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        .actions { margin-top: 16px; display: flex; gap: 10px; }
+        button { padding: 8px 18px; border: none; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+        .approve { background: #2f855a; color: white; }
+        .edit { background: #2b6cb0; color: white; }
+        .reject { background: #c53030; color: white; }
+        a.back { display: inline-block; margin-bottom: 16px; color: #2b6cb0; text-decoration: none; }
+        .original { background: #f7f7f7; border: 1px solid #e2e2e2; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; }
+        .original-meta { color: #666; font-size: 0.8rem; margin: 4px 0 10px; }
+        .original-body { white-space: pre-wrap; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <a class="back" href="{% url 'dashboard:pending_approvals' %}">&larr; Back to list</a>
+    <h1>Review Draft Response</h1>
+    <div class="meta">
+        <span class="badge">{{ run.category }}</span>
+        <span class="badge">urgency: {{ run.urgency }}</span>
+        <span class="badge">sentiment: {{ run.sentiment }}</span>
+        {% if run.action_taken %}<span class="badge">routed as: {{ run.action_taken }}</span>{% endif %}
+    </div>
+
+    <div class="original">
+        <strong>Received message</strong>
+        <div class="original-meta">From: {{ run.original_sender }} &nbsp;|&nbsp; Subject: {{ run.original_subject }}</div>
+        <div class="original-body">{{ run.original_body }}</div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="edited_text"><strong>Draft response</strong> (edit below if needed):</label><br><br>
+        <textarea name="edited_text" id="edited_text">{{ run.draft_response }}</textarea>
+
+        <div class="actions">
+            <button type="submit" name="action" value="approve" class="approve">Approve as-is</button>
+            <button type="submit" name="action" value="edit" class="edit">Send with edits</button>
+            <button type="submit" name="action" value="reject" class="reject">Reject</button>
+        </div>
+    </form>
+</body>
+</html>

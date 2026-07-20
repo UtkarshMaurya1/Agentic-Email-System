@@ -6,6 +6,10 @@ class AgentRun(models.Model):
     langgraph_thread_id = models.CharField(max_length=255, unique=True)
     message_id = models.CharField(max_length=255)
 
+    original_subject = models.CharField(max_length=500, blank=True)
+    original_sender = models.CharField(max_length=255, blank=True)
+    original_body = models.TextField(blank=True)
+
     issue_type = models.CharField(max_length=100, null=True, blank=True)
     urgency = models.CharField(max_length=20, null=True, blank=True)
     sentiment = models.CharField(max_length=20, null=True, blank=True)

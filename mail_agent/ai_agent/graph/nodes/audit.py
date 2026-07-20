@@ -16,6 +16,9 @@ def log_and_audit(state):
         langgraph_thread_id=state["thread_id"],
         defaults={
             "message_id": state["message_id"],
+            "original_subject": state["raw_email"].get("subject", ""),
+            "original_sender": state["raw_email"].get("from", ""),
+            "original_body": state["raw_email"].get("body", ""),
             "issue_type": state.get("issue_type"),
             "urgency": state.get("urgency"),
             "sentiment": state.get("sentiment"),
