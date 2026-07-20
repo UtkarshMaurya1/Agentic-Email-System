@@ -1,4 +1,5 @@
 from django.conf import settings
+from langgraph.types import Command
 
 from ai_agent.graph.graph_builder import get_compiled_graph
 
@@ -26,3 +27,13 @@ def run_email_agent(thread_id: str, message_id: str, raw_email: dict):
     }
     config = {"configurable": {"thread_id": thread_id}}
     return graph.invoke(initial_state, config=config)
+
+def resume_email_agent(thread_id: str, decision: str, edited_text: str | None = None):
+    """
+    Call this from the approval dashboard view when a human makes a decision.
+    decision: "approved" | "edited" | "rejected"
+    """
+    graph = _get_graph()
+    config = {"configurable": {"thread_id": thread_id}}
+    resume_payload = {"decision": decision, "edited_text": edited_text}
+    return graph.invoke(Command(resume=resume_payload), config=config)

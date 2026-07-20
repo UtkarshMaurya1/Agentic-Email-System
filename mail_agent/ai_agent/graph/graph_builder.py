@@ -1,7 +1,8 @@
+
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.postgres import PostgresSaver
 from django.conf import settings
- 
+
 from ai_agent.graph.state import EmailAgentState
 from ai_agent.graph.routing import route_after_classification, route_after_decision
 from ai_agent.graph.nodes import stubs
@@ -10,6 +11,14 @@ from ai_agent.graph.nodes.classify import classify_and_route
 from ai_agent.graph.nodes.retrieve import retrieve_kb
 from ai_agent.graph.nodes.generate import generate_reply
 from ai_agent.graph.nodes.decide import decide_action
+from ai_agent.graph.nodes.approval import await_approval
+from ai_agent.graph.nodes.send import send_email
+from ai_agent.graph.nodes.notify import notify_human
+from ai_agent.graph.nodes.audit import log_and_audit
+ 
+ 
+def route_after_approval(state) -> str:
+    return "send_email" if state.get("approval_status") in ("approved", "edited") else "log_and_audit"
  
  
 def build_graph(checkpointer):
@@ -21,10 +30,10 @@ def build_graph(checkpointer):
     graph.add_node("retrieve_kb", retrieve_kb)
     graph.add_node("generate_reply", generate_reply)
     graph.add_node("decide_action", decide_action)
-    graph.add_node("send_email", stubs.send_email)
-    graph.add_node("await_approval", stubs.await_approval)
-    graph.add_node("notify_human", stubs.notify_human)
-    graph.add_node("log_and_audit", stubs.log_and_audit)
+    graph.add_node("send_email", send_email)
+    graph.add_node("await_approval", await_approval)
+    graph.add_node("notify_human", notify_human)
+    graph.add_node("log_and_audit", log_and_audit)
  
     graph.add_edge(START, "ingest_email")
     graph.add_edge("ingest_email", "analyze_email")
@@ -50,11 +59,16 @@ def build_graph(checkpointer):
     )
  
     graph.add_edge("send_email", "log_and_audit")
-    graph.add_edge("await_approval", "log_and_audit")  # Phase D: interrupt lives here
+    graph.add_conditional_edges(
+        "await_approval",
+        route_after_approval,
+        {"send_email": "send_email", "log_and_audit": "log_and_audit"},
+    )
     graph.add_edge("notify_human", "log_and_audit")
     graph.add_edge("log_and_audit", END)
  
     return graph.compile(checkpointer=checkpointer)
+
 
 # making sure that checkpoints stay alive in django
 _CHECKPOINTER_CM = None
