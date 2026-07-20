@@ -1,19 +1,11 @@
 from datetime import datetime, timezone
 
 from ai_agent.models import AgentRun
+from emails.logics.email_send import send_reply
 
 
 def _log(node_name: str, note: str = "") -> dict:
     return {"node": node_name, "timestamp": datetime.now(timezone.utc).isoformat(), "summary": note}
-
-
-def _actually_send(to_address: str, subject: str, body: str) -> None:
-    """
-    TODO: wire this to your real emails app send logic
-    (e.g. emails.logics.email_send.send_reply(...)) once it's built.
-    Left as a clear seam so this node's structure doesn't change later.
-    """
-    print(f"[STUB SEND] to={to_address} subject={subject}\n{body}")
 
 
 def send_email(state):
@@ -25,14 +17,15 @@ def send_email(state):
         return {"audit_trail": [_log("send_email", "skipped — already completed for this thread")]}
 
     to_address = state["raw_email"].get("from") or state["raw_email"].get("sender", "unknown")
-    subject = state["raw_email"].get("subject", "Re: your inquiry")
+    subject = state["raw_email"].get("subject", "your inquiry")
+    original_message_id = state.get("message_id")
 
     try:
-        _actually_send(to_address, subject, final_text or "")
+        send_reply(to_address, subject, final_text or "", in_reply_to=original_message_id)
     except Exception as e:
         return {
             "errors": [{"node": "send_email", "error": str(e)}],
-            "audit_trail": [_log("send_email", "send failed")],
+            "audit_trail": [_log("send_email", f"send failed: {e}")],
         }
 
     return {"audit_trail": [_log("send_email", f"sent to {to_address}")]}

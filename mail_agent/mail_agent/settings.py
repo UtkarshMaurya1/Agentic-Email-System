@@ -92,6 +92,16 @@ DATABASES = {
 LANGGRAPH_DB_URI = "postgresql://utkarsh:admin%4012@localhost:5432/mail_agent_db"
 
 
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+
+CELERY_BEAT_SCHEDULE = {
+    "poll-unread-emails-every-minute": {
+        "task": "emails.tasks.poll_unread_emails_task",
+        "schedule": 60.0,  # seconds
+    },
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
