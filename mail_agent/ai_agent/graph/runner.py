@@ -8,7 +8,7 @@ _compiled_graph = None
 def _get_graph():
     global _compiled_graph
     if _compiled_graph is None:
-        _compiled_graph = get_compiled_graph(settings.LANGGRAPH_DB_URI)
+        _compiled_graph = get_compiled_graph()
     return _compiled_graph
 
 
