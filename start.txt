@@ -1,3 +1,4 @@
+Remembering for next day
 run these on 2 terminal:
 
 celery -A mail_agent beat -l info
