@@ -12,12 +12,20 @@
         .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #eef; margin-right: 6px; }
         .empty { color: #888; padding: 40px 0; text-align: center; }
         a.button { display: inline-block; margin-top: 8px; padding: 6px 14px; background: #2b6cb0; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; }
+        .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.9rem; }
+        .flash.success { background: #e6f4ea; color: #1a7f37; }
+        .flash.info { background: #e8f0fe; color: #1a56db; }
+        .flash.error { background: #fee; color: #c53030; }
     </style>
 </head>
 <body>
     <h1>Pending Approvals ({{ pending|length }})</h1>
 
-    {% for messages_group in messages %}{% endfor %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="flash {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 
     {% if pending %}
         {% for approval in pending %}

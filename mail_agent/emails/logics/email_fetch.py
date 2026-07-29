@@ -5,6 +5,7 @@ import email
 import imaplib
 import os
 from email.header import decode_header
+from email.utils import parseaddr
 
 from dotenv import load_dotenv
 
@@ -41,10 +42,14 @@ def fetch_unread_emails() -> list[dict]:
     Returns a list of dicts:
     {"message_id": str, "thread_id": str, "subject": str, "body": str, "from": str}
 
+    Only fetches unread mail from Gmail's "Primary" category (excludes
+    Promotions/Social/Updates), using Gmail's IMAP search extension.
+    Also skips any email sent from our own address, to avoid re-ingesting
+    our own notification/alert emails as if they were customer messages.
+
     Does NOT mark emails as read here — dedup is handled downstream via
     AgentRun.message_id, so re-fetching an already-processed email is safe
-    (the Celery task skips it). Marking read/unread is left as a later
-    decision (see note at bottom).
+    (the Celery task skips it).
     """
     address = os.environ["GMAIL_ADDRESS"]
     app_password = os.environ["GMAIL_APP_PASSWORD"]
@@ -53,22 +58,26 @@ def fetch_unread_emails() -> list[dict]:
     conn.login(address, app_password)
     conn.select("INBOX")
 
-    status, data = conn.search(None, "UNSEEN")
+    # Gmail-specific search extension: restrict to Primary tab + unread.
+    status, data = conn.uid("search", None, "X-GM-RAW", '"category:primary is:unread"')
     results = []
 
     if status == "OK":
-        for num in data[0].split():
-            status, msg_data = conn.fetch(num, "(RFC822)")
-            if status != "OK":
+        uids = data[0].split()
+        for uid in uids:
+            status, msg_data = conn.uid("fetch", uid, "(RFC822)")
+            if status != "OK" or not msg_data or msg_data[0] is None:
                 continue
 
             raw_msg = msg_data[0][1]
             msg = email.message_from_bytes(raw_msg)
 
+            sender_raw = _decode(msg.get("From", ""))
+            _, sender_address = parseaddr(sender_raw)
+            if sender_address.lower() == address.lower():
+                continue  # skip our own self-sent notification/alert emails
+
             message_id = msg.get("Message-ID", "").strip()
-            # Gmail threads: References/In-Reply-To chain back to the first
-            # Message-ID in a thread. Use References' first entry as thread_id,
-            # falling back to this message's own id for a new thread.
             references = msg.get("References", "")
             thread_id = references.split()[0].strip() if references else message_id
 
@@ -77,7 +86,7 @@ def fetch_unread_emails() -> list[dict]:
                 "thread_id": thread_id,
                 "subject": _decode(msg.get("Subject", "")),
                 "body": _extract_body(msg),
-                "from": _decode(msg.get("From", "")),
+                "from": sender_raw,
             })
 
     conn.close()
