@@ -1,4 +1,4 @@
-## Status: 🚧 Ongoing project
+## Agentic Email System
 
 ## Overview
 
