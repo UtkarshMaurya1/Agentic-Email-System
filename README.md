@@ -2,7 +2,7 @@
 
 ## Overview
 
-An AI-powered email support agent for a travel booking use case. It reads incoming emails, analyzes intent/urgency/sentiment, retrieves relevant context from a knowledge base (travel itinerary PDFs), drafts a reply, and either auto-sends, escalates for human approval, or notifies a human — all orchestrated as a stateful LangGraph workflow with checkpointing, so execution can pause (e.g. waiting on human approval) and resume exactly where it left off.
+An AI-powered email support agent that reads incoming emails, analyzes intent/urgency/sentiment, retrieves relevant context from a knowledge base (if required), drafts a reply, and either auto-sends, escalates for human approval, or notifies a human — all orchestrated as a stateful LangGraph workflow with checkpointing, so execution can pause (e.g. waiting on human approval) and resume exactly where it left off.
 
 ## Tech Stack
 
